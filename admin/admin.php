@@ -6,11 +6,20 @@ class Password_Protected_Admin {
 	var $options_group = 'password-protected';
 
 	/**
-	 * Constructor
+	 * Plugin main class instance.
+	 *
+	 * @var Password_Protected
 	 */
-	public function __construct() {
+	private $plugin;
 
-		global $wp_version;
+	/**
+	 * Constructor
+	 *
+	 * @param Password_Protected $plugin Plugin main class instance.
+	 */
+	public function __construct( $plugin ) {
+
+		$this->plugin = $plugin;
 
 		add_action( 'admin_init', array( $this, 'password_protected_settings' ), 5 );
 		add_action( 'admin_init', array( $this, 'add_privacy_policy' ) );
@@ -139,13 +148,15 @@ class Password_Protected_Admin {
 			'password_protected'
 		);
 
-		add_settings_field(
-			'password_protected_allowed_ip_addresses',
-			__( 'Allow IP Addresses', 'password-protected' ),
-			array( $this, 'password_protected_allowed_ip_addresses_field' ),
-			$this->options_group,
-			'password_protected'
-		);
+		if ( ! $this->plugin->is_vip_env() ) {
+			add_settings_field(
+				'password_protected_allowed_ip_addresses',
+				__( 'Allow IP Addresses', 'password-protected' ),
+				array( $this, 'password_protected_allowed_ip_addresses_field' ),
+				$this->options_group,
+				'password_protected'
+			);
+		}
 
 		add_settings_field(
 			'password_protected_remember_me',
@@ -169,7 +180,12 @@ class Password_Protected_Admin {
 		register_setting( $this->options_group, 'password_protected_administrators', 'intval' );
 		register_setting( $this->options_group, 'password_protected_users', 'intval' );
 		register_setting( $this->options_group, 'password_protected_password', array( $this, 'sanitize_password_protected_password' ) );
-		register_setting( $this->options_group, 'password_protected_allowed_ip_addresses', array( $this, 'sanitize_ip_addresses' ) );
+		if ( ! $this->plugin->is_vip_env() ) {
+			register_setting( $this->options_group, 'password_protected_allowed_ip_addresses', [
+				$this,
+				'sanitize_ip_addresses'
+			] );
+		}
 		register_setting( $this->options_group, 'password_protected_remember_me', 'boolval' );
 		register_setting( $this->options_group, 'password_protected_remember_me_lifetime', 'intval' );
 

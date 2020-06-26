@@ -4,7 +4,7 @@
 Plugin Name: Password Protected
 Plugin URI: https://wordpress.org/plugins/password-protected/
 Description: A very simple way to quickly password protect your WordPress site with a single password. Please note: This plugin does not restrict access to uploaded files and images and does not work with some caching setups.
-Version: 2.3
+Version: 2.4.0
 Author: Ben Huson
 Text Domain: password-protected
 Author URI: http://github.com/benhuson/password-protected/
@@ -42,7 +42,7 @@ $Password_Protected = new Password_Protected();
 
 class Password_Protected {
 
-	var $version = '2.3';
+	var $version = '2.4.0';
 	var $admin   = null;
 	var $errors  = null;
 
@@ -57,7 +57,10 @@ class Password_Protected {
 
 		add_action( 'plugins_loaded', array( $this, 'load_plugin_textdomain' ) );
 
-		add_filter( 'password_protected_is_active', array( $this, 'allow_ip_addresses' ) );
+		if ( ! $this->is_vip_env() ) {
+			// On VIP environment, platform restriction by IP should be used.
+			add_filter( 'password_protected_is_active', array( $this, 'allow_ip_addresses' ) );
+		}
 
 		add_action( 'init', array( $this, 'disable_caching' ), 1 );
 		add_action( 'init', array( $this, 'maybe_process_logout' ), 1 );
@@ -82,10 +85,19 @@ class Password_Protected {
 			include_once( dirname( __FILE__ ) . '/admin/admin.php' );
 
 			$this->admin_caching = new Password_Protected_Admin_Caching( $this );
-			$this->admin = new Password_Protected_Admin();
+			$this->admin = new Password_Protected_Admin( $this );
 
 		}
 
+	}
+
+	/**
+	 * Check if site is running in the VIP environment.
+	 *
+	 * @return bool
+	 */
+	public function is_vip_env() {
+		return defined ('WPCOM_IS_VIP_ENV' ) && WPCOM_IS_VIP_ENV;
 	}
 
 	/**
