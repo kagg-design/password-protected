@@ -53,7 +53,7 @@ class Password_Protected {
 
 		$this->errors = new WP_Error();
 
-		register_activation_hook( __FILE__, array( &$this, 'install' ) );
+		$this->upgrade();
 
 		add_action( 'plugins_loaded', array( $this, 'load_plugin_textdomain' ) );
 
@@ -587,7 +587,7 @@ class Password_Protected {
 			return false;
 		}
 
-		list( $site_id, $expiration, $hmac ) = $cookie_elements;
+		[ $site_id, $expiration, $hmac ] = $cookie_elements;
 
 		return compact( 'site_id', 'expiration', 'hmac', 'scheme' );
 
@@ -651,9 +651,9 @@ class Password_Protected {
 	}
 
 	/**
-	 * Install
+	 * Upgrade plugin.
 	 */
-	public function install() {
+	public function upgrade() {
 
 		$old_version = get_option( 'password_protected_version' );
 
