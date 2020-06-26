@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.4.0] - 2020-06-26
+
+### Added
+- Support for VIP Go platform.
+
 ## [2.3] - 2020-05-17
 
 ### Added
