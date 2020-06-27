@@ -400,7 +400,8 @@ class Password_Protected {
 			}
 
 			$theme_file = apply_filters( 'password_protected_theme_file', $default_theme_file );
-			if ( ! file_exists( $theme_file ) ) {
+
+			if ( ! $this->is_file_valid( $theme_file ) ) {
 				$theme_file = $default_theme_file;
 			}
 
@@ -423,6 +424,24 @@ class Password_Protected {
 			exit();
 
 		}
+	}
+
+	/**
+	 * Check if filtered filename is valid.
+	 *
+	 * @param string $file Filename.
+	 *
+	 * @return bool
+	 */
+	private function is_file_valid( $file ) {
+		$validate = validate_file( $file );
+
+		// 2 means Windows file path.
+		if ( 2 === $validate && $this->is_vip_env() ) {
+			return false;
+		}
+
+		return ( 0 === $validate ) && file_exists( $file );
 	}
 
 	/**
