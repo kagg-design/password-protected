@@ -29,7 +29,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 /**
- * @todo Use wp_hash_password() ?
  * @todo Remember me
  */
 
@@ -281,8 +280,24 @@ class Password_Protected {
 	 */
 	public function encrypt_password( $password ) {
 
-		return md5( $password );
+		return wp_hash_password( md5( $password ) );
 
+	}
+
+	/**
+	 * Check password.
+	 *
+	 * @param string $password Password.
+	 * @param string $hash     Hash.
+	 *
+	 * @return bool
+	 */
+	public function check_password( $password, $hash ) {
+//		$wp_hasher = new PasswordHash( 8, true );
+//
+//		return $wp_hasher->CheckPassword( md5( $password ), $stored_hash );
+
+		return wp_check_password( md5( $password ), $hash );
 	}
 
 	/**
@@ -329,7 +344,7 @@ class Password_Protected {
 
 		// If correct password...
 		if (
-			( wp_verify_nonce( $nonce, self::ACTION ) && hash_equals( $pwd, $this->encrypt_password( $password_protected_pwd ) ) && '' !== $pwd ) ||
+			( wp_verify_nonce( $nonce, self::ACTION ) && $this->check_password( $password_protected_pwd, $pwd ) && '' !== $pwd ) ||
 			apply_filters( 'password_protected_process_login', false, $password_protected_pwd )
 		) {
 
@@ -725,6 +740,17 @@ class Password_Protected {
 			$pwd = get_option( 'password_protected_password' );
 			if ( ! empty( $pwd ) ) {
 				$new_pwd = $this->encrypt_password( $pwd );
+				update_option( 'password_protected_password', $new_pwd );
+			}
+		}
+
+		require_once ABSPATH . WPINC . '/pluggable.php';
+		// 2.4.0 - Upgrade to wp_hash_password
+		if ( empty( $old_version ) || version_compare( '2.4.0', $old_version, '>' ) ) {
+			$pwd = get_option( 'password_protected_password' );
+			if ( ! empty( $pwd ) ) {
+				require_once ABSPATH . WPINC . '/pluggable.php';
+				$new_pwd = wp_hash_password( $pwd );
 				update_option( 'password_protected_password', $new_pwd );
 			}
 		}
