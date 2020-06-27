@@ -1,12 +1,16 @@
 <?php
-
 /**
- * @package     Password Protected
- * @subpackage  Admin Caching
+ * Password_Protected_Admin_Caching class file.
  *
- * @since  2.1
+ * @package     password-protected
+ * @subpackage  admin-caching
+ *
+ * @since       2.1
  */
 
+/**
+ * Class Password_Protected_Admin_Caching
+ */
 class Password_Protected_Admin_Caching {
 
 	/**
@@ -19,17 +23,20 @@ class Password_Protected_Admin_Caching {
 	private $plugin = null;
 
 	/**
-	 * Constructor
+	 * Password_Protected_Admin_Caching constructor.
 	 *
-	 * @since  2.1
+	 * @param Password_Protected $plugin Main plugin class instance.
 	 *
 	 * @internal  Private. This class should only be instantiated once by the plugin.
+	 *
+	 * @since     2.1
+	 *
 	 */
 	public function __construct( $plugin ) {
 
 		$this->plugin = $plugin;
 
-		add_action( 'admin_init', array( $this, 'cache_settings_info' ) );
+		add_action( 'admin_init', [ $this, 'cache_settings_info' ] );
 
 	}
 
@@ -43,43 +50,43 @@ class Password_Protected_Admin_Caching {
 	 */
 	public function cache_settings_info() {
 
-		// Caching Section
+		// Caching Section.
 		add_settings_section(
 			'password_protected_compat_caching',
 			__( 'Caching', 'password-protected' ),
-			array( $this, 'section_caching' ),
+			[ $this, 'section_caching' ],
 			'password-protected-compat'
 		);
 
-		// Cookies
+		// Cookies.
 		add_settings_field(
 			'password_protected_compat_caching_cookie',
 			__( 'Cookie Name', 'password-protected' ),
-			array( $this, 'field_cookies' ),
+			[ $this, 'field_cookies' ],
 			'password-protected-compat',
 			'password_protected_compat_caching'
 		);
 
-		// WP Engine Hosting
+		// WP Engine Hosting.
 		if ( $this->test_wp_engine() ) {
 
 			add_settings_field(
 				'password_protected_compat_caching_wp_engine',
 				__( 'WP Engine Hosting', 'password-protected' ),
-				array( $this, 'field_wp_engine' ),
+				[ $this, 'field_wp_engine' ],
 				'password-protected-compat',
 				'password_protected_compat_caching'
 			);
 
 		}
 
-		// W3 Total Cache
+		// W3 Total Cache.
 		if ( $this->test_w3_total_cache() ) {
 
 			add_settings_field(
 				'password_protected_compat_caching_w3_total_cache',
 				__( 'W3 Total Cache', 'password-protected' ),
-				array( $this, 'field_w3_total_cache' ),
+				[ $this, 'field_w3_total_cache' ],
 				'password-protected-compat',
 				'password_protected_compat_caching'
 			);
@@ -95,9 +102,9 @@ class Password_Protected_Admin_Caching {
 	 */
 	public function section_caching() {
 
-		echo '<p>' . esc_html__( 'Password Protected does not always work well with sites that use caching.', 'password-protected' ) . '<br />
-			' . esc_html__( 'If your site uses a caching plugin or your web hosting uses server-side caching, you may need to configure your caching setup to disable caching for the Password Protected cookie:', 'password-protected' ) .
-		     '</p>';
+		echo '<p>' . esc_html__( 'Password Protected does not always work well with sites that use caching.', 'password-protected' );
+		echo '<br />' . esc_html__( 'If your site uses a caching plugin or your web hosting uses server-side caching, you may need to configure your caching setup to disable caching for the Password Protected cookie:', 'password-protected' );
+		echo '</p>';
 
 	}
 
@@ -109,7 +116,9 @@ class Password_Protected_Admin_Caching {
 	public function field_cookies() {
 
 		echo '<p><code>' . esc_html( $this->plugin->cookie_name() ) . '</code></p>';
-		echo '<p class="description">' . esc_html__( 'Can be changed using the `password_protected_cookie_name` filter.', 'password-protected' ) . '</p>';
+		echo '<p class="description">';
+		echo esc_html__( 'Can be changed using the `password_protected_cookie_name` filter.', 'password-protected' );
+		echo '</p>';
 
 	}
 
@@ -120,9 +129,9 @@ class Password_Protected_Admin_Caching {
 	 */
 	public function field_wp_engine() {
 
-		echo '<p>' . esc_html__( 'We have detected your site may be running on WP Engine hosting.', 'password-protected' ) . '<br />
-			' . esc_html__( 'In order for Password Protected to work with WP Engine\'s caching configuration you must ask them to disable caching for the Password Protected cookie.', 'password-protected' ) .
-		     '</p>';
+		echo '<p>' . esc_html__( 'We have detected your site may be running on WP Engine hosting.', 'password-protected' ) . '<br />';
+		echo esc_html__( 'In order for Password Protected to work with WP Engine\'s caching configuration you must ask them to disable caching for the Password Protected cookie.', 'password-protected' );
+		echo '</p>';
 
 	}
 
@@ -133,10 +142,19 @@ class Password_Protected_Admin_Caching {
 	 */
 	public function field_w3_total_cache() {
 
-		echo '<p>' . esc_html__( 'It looks like you may be using the W3 Total Cache plugin?', 'password-protected' ) . '<br />
-			' . esc_html__( 'In order for Password Protected to work with W3 Total Cache you must disable caching when the Password Protected cookie is set.', 'password-protected' ) . ' 
-			' . wp_kses_post( sprintf( __( 'You can adjust the cookie settings for W3 Total Cache under <a href="%s">Performance > Page Cache > Advanced > Rejected Cookies</a>.', 'password-protected' ), admin_url( '/admin.php?page=w3tc_pgcache#advanced' ) ) ) .
-		     '</p>';
+		echo '<p>' . esc_html__( 'It looks like you may be using the W3 Total Cache plugin?', 'password-protected' ) . '<br />';
+		echo esc_html__( 'In order for Password Protected to work with W3 Total Cache you must disable caching when the Password Protected cookie is set.', 'password-protected' );
+		echo wp_kses_post(
+			sprintf(
+				/* translators: W3TC settings url. */
+				__(
+					'You can adjust the cookie settings for W3 Total Cache under <a href="%s">Performance > Page Cache > Advanced > Rejected Cookies</a>.',
+					'password-protected'
+				),
+				admin_url( '/admin.php?page=w3tc_pgcache#advanced' )
+			)
+		);
+		echo '</p>';
 
 	}
 
@@ -145,7 +163,7 @@ class Password_Protected_Admin_Caching {
 	 *
 	 * @since  2.1
 	 *
-	 * @return  boolean
+	 * @return boolean
 	 */
 	private function test_wp_engine() {
 
@@ -158,7 +176,7 @@ class Password_Protected_Admin_Caching {
 	 *
 	 * @since  2.1
 	 *
-	 * @return  boolean
+	 * @return boolean
 	 */
 	private function test_w3_total_cache() {
 
