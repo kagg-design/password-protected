@@ -150,7 +150,7 @@ class Password_Protected {
 
 		$is_active = apply_filters( 'password_protected_is_active', $is_active );
 
-		if ( isset( $_GET['password-protected'] ) ) {
+		if ( filter_input( INPUT_GET, 'password-protected', FILTER_SANITIZE_STRING ) ) {
 			$is_active = true;
 		}
 
@@ -177,12 +177,20 @@ class Password_Protected {
 
 	/**
 	 * Disable Feed
-	 *
-	 * @todo  Make Translatable
 	 */
 	public function disable_feed() {
 
-		wp_die( sprintf( __( 'Feeds are not available for this site. Please visit the <a href="%s">website</a>.', 'password-protected' ), get_bloginfo( 'url' ) ) );
+		wp_die(
+			wp_kses_post(
+				sprintf(
+					__(
+						'Feeds are not available for this site. Please visit the <a href="%s">website</a>.',
+						'password-protected'
+					),
+					esc_url( get_bloginfo( 'url' ) )
+				)
+			)
+		);
 
 	}
 
@@ -246,7 +254,14 @@ class Password_Protected {
 
 		$ip_addresses = $this->get_allowed_ip_addresses();
 
-		if ( isset( $_SERVER['REMOTE_ADDR'] ) && in_array( $_SERVER['REMOTE_ADDR'], $ip_addresses ) ) {
+		// We do not use this method on VIP.
+		// phpcs:disable WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__
+		// phpcs:disable WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders
+		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? filter_var( $_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP ) : null;
+		// phpcs:enable WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders
+		// phpcs:enable WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__
+
+		if ( in_array( $remote_addr, $ip_addresses ) ) {
 			$bool = false;
 		}
 
@@ -261,7 +276,7 @@ class Password_Protected {
 	 */
 	public function get_allowed_ip_addresses() {
 
-		return explode( "\n", get_option( 'password_protected_allowed_ip_addresses' ) );
+		return array_filter( explode( "\n", get_option( 'password_protected_allowed_ip_addresses' ) ) );
 
 	}
 
@@ -297,10 +312,6 @@ class Password_Protected {
 	 * @return bool
 	 */
 	public function check_password( $password, $hash ) {
-//		$wp_hasher = new PasswordHash( 8, true );
-//
-//		return $wp_hasher->CheckPassword( md5( $password ), $stored_hash );
-
 		return wp_check_password( md5( $password ), $hash );
 	}
 
@@ -431,8 +442,14 @@ class Password_Protected {
 
 			$redirect_to = add_query_arg( 'password-protected', 'login', home_url() );
 
+			$host = isset( $_SERVER['HTTP_HOST'] ) ? filter_var( $_SERVER['HTTP_HOST'], FILTER_SANITIZE_STRING ) : null;
+			$uri = isset( $_SERVER['REQUEST_URI'] ) ? filter_var( $_SERVER['REQUEST_URI'], FILTER_SANITIZE_STRING ) : null;
+
 			// URL to redirect back to after login
-			$redirect_to_url = apply_filters( 'password_protected_login_redirect_url', ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] );
+			$redirect_to_url = apply_filters(
+				'password_protected_login_redirect_url',
+				( is_ssl() ? 'https://' : 'http://' ) . $host . $uri
+			);
 			if ( ! empty( $redirect_to_url ) ) {
 				$redirect_to = add_query_arg( 'redirect_to', urlencode( $redirect_to_url ), $redirect_to );
 			}
@@ -550,15 +567,17 @@ class Password_Protected {
 	/**
 	 * Logout Link Shortcode
 	 *
-	 * @param   array   $args  Link args.
-	 * @return  string         HTML link tag.
+	 * @param array  $atts    Link args.
+	 * @param string $content Shortcode content.
+	 *
+	 * @return string         HTML link tag.
 	 */
 	public function logout_link_shortcode( $atts, $content = null ) {
 
-		$atts = shortcode_atts( array(
+		$atts = shortcode_atts( [
 			'redirect_to' => '',
-			'text'        => $content
-		), $atts, 'logout_link_shortcode' );
+			'text'        => $content,
+		], $atts, 'logout_link_shortcode' );
 
 		return $this->logout_link( $atts );
 
@@ -655,6 +674,8 @@ class Password_Protected {
 
 			$cookie_name = $this->cookie_name();
 
+			// We made server cookie working on VIP with vip_cookie_name() filter.
+			// phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___COOKIE
 			if ( empty( $_COOKIE[ $cookie_name ] ) ) {
 				return [];
 			}
@@ -701,10 +722,13 @@ class Password_Protected {
 		$secure_password_protected_cookie = apply_filters( 'password_protected_secure_password_protected_cookie', false, $secure );
 		$password_protected_cookie = $this->generate_auth_cookie( $expiration, 'password_protected' );
 
+		// We made server cookie working on VIP with vip_cookie_name() filter.
+		// phpcs:disable WordPressVIPMinimum.Functions.RestrictedFunctions.cookies_setcookie
 		setcookie( $this->cookie_name(), $password_protected_cookie, $expire, COOKIEPATH, COOKIE_DOMAIN, $secure_password_protected_cookie, true );
 		if ( COOKIEPATH != SITECOOKIEPATH ) {
 			setcookie( $this->cookie_name(), $password_protected_cookie, $expire, SITECOOKIEPATH, COOKIE_DOMAIN, $secure_password_protected_cookie, true );
 		}
+		// phpcs:enable WordPressVIPMinimum.Functions.RestrictedFunctions.cookies_setcookie
 
 	}
 
@@ -713,8 +737,11 @@ class Password_Protected {
 	 */
 	public function clear_auth_cookie() {
 
+		// We made server cookie working on VIP with vip_cookie_name() filter.
+		// phpcs:disable WordPressVIPMinimum.Functions.RestrictedFunctions.cookies_setcookie
 		setcookie( $this->cookie_name(), ' ', current_time( 'timestamp' ) - 31536000, COOKIEPATH, COOKIE_DOMAIN );
 		setcookie( $this->cookie_name(), ' ', current_time( 'timestamp' ) - 31536000, SITECOOKIEPATH, COOKIE_DOMAIN );
+		// phpcs:enable WordPressVIPMinimum.Functions.RestrictedFunctions.cookies_setcookie
 
 	}
 
@@ -809,7 +836,7 @@ class Password_Protected {
 		// Add message
 		$message = apply_filters( 'password_protected_login_message', '' );
 		if ( ! empty( $message ) ) {
-			echo $message . "\n";
+			echo wp_kses_post( $message ) . "\n";
 		}
 
 		if ( $this->errors->get_error_code() ) {
@@ -829,10 +856,14 @@ class Password_Protected {
 			}
 
 			if ( ! empty( $errors ) ) {
-				echo '<div id="login_error">' . apply_filters( 'password_protected_login_errors', $errors ) . "</div>\n";
+				echo '<div id="login_error">' .
+				     wp_kses_post( apply_filters( 'password_protected_login_errors', $errors ) ) .
+				     "</div>\n";
 			}
 			if ( ! empty( $messages ) ) {
-				echo '<p class="message">' . apply_filters( 'password_protected_login_messages', $messages ) . "</p>\n";
+				echo '<p class="message">' .
+				     wp_kses_post( apply_filters( 'password_protected_login_messages', $messages ) ).
+				     "</p>\n";
 			}
 
 		}
@@ -842,7 +873,7 @@ class Password_Protected {
 	/**
 	 * Load Theme Stylesheet
 	 *
-	 * Check wether a 'password-protected-login.css' stylesheet exists in your theme
+	 * Check whether a 'password-protected-login.css' stylesheet exists in your theme
 	 * and if so loads it.
 	 *
 	 * Works with child themes.
@@ -884,6 +915,7 @@ class Password_Protected {
 		$location = wp_validate_redirect( $location, home_url() );
 
 		wp_redirect( $location, $status );
+		exit();
 
 	}
 
@@ -893,7 +925,7 @@ class Password_Protected {
 	 * Check to see if there are any known reasons why this plugin may not work in
 	 * the user's hosting environment.
 	 *
-	 * @return  boolean
+	 * @return  boolean|WP_Error
 	 */
 	static function is_plugin_supported() {
 
@@ -908,7 +940,7 @@ class Password_Protected {
 	 * and other admin/plugin compatibility.
 	 *
 	 * @param   WP_REST_Request   $access  Full details about the request.
-	 * @return  WP_Error|boolean
+	 * @return  WP_Error|WP_REST_Request
 	 */
 	public function only_allow_logged_in_rest_access( $access ) {
 

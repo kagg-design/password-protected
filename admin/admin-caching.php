@@ -95,8 +95,9 @@ class Password_Protected_Admin_Caching {
 	 */
 	public function section_caching() {
 
-		echo '<p>' . __( 'Password Protected does not always work well with sites that use caching.', 'password-protected' ) . '<br />
-			' . __( 'If your site uses a caching plugin or your web hosting uses server-side caching, you may need to configure your caching setup to disable caching for the Password Protected cookie:', 'password-protected' ) . '</p>';
+		echo '<p>' . esc_html__( 'Password Protected does not always work well with sites that use caching.', 'password-protected' ) . '<br />
+			' . esc_html__( 'If your site uses a caching plugin or your web hosting uses server-side caching, you may need to configure your caching setup to disable caching for the Password Protected cookie:', 'password-protected' ) .
+		     '</p>';
 
 	}
 
@@ -108,7 +109,7 @@ class Password_Protected_Admin_Caching {
 	public function field_cookies() {
 
 		echo '<p><code>' . esc_html( $this->plugin->cookie_name() ) . '</code></p>';
-		echo '<p class="description">' . __( 'Can be changed using the `password_protected_cookie_name` filter.', 'password-protected' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Can be changed using the `password_protected_cookie_name` filter.', 'password-protected' ) . '</p>';
 
 	}
 
@@ -119,8 +120,9 @@ class Password_Protected_Admin_Caching {
 	 */
 	public function field_wp_engine() {
 
-		echo '<p>' . __( 'We have detected your site may be running on WP Engine hosting.', 'password-protected' ) . '<br />
-			' . __( 'In order for Password Protected to work with WP Engine\'s caching configuration you must ask them to disable caching for the Password Protected cookie.', 'password-protected' ) . '</p>';
+		echo '<p>' . esc_html__( 'We have detected your site may be running on WP Engine hosting.', 'password-protected' ) . '<br />
+			' . esc_html__( 'In order for Password Protected to work with WP Engine\'s caching configuration you must ask them to disable caching for the Password Protected cookie.', 'password-protected' ) .
+		     '</p>';
 
 	}
 
@@ -131,9 +133,10 @@ class Password_Protected_Admin_Caching {
 	 */
 	public function field_w3_total_cache() {
 
-		echo '<p>' . __( 'It looks like you may be using the W3 Total Cache plugin?', 'password-protected' ) . '<br />
-			' . __( 'In order for Password Protected to work with W3 Total Cache you must disable caching when the Password Protected cookie is set.', 'password-protected' ) . ' 
-			' . sprintf( __( 'You can adjust the cookie settings for W3 Total Cache under <a href="%s">Performance > Page Cache > Advanced > Rejected Cookies</a>.', 'password-protected' ), admin_url( '/admin.php?page=w3tc_pgcache#advanced' ) ) . '</p>';
+		echo '<p>' . esc_html__( 'It looks like you may be using the W3 Total Cache plugin?', 'password-protected' ) . '<br />
+			' . esc_html__( 'In order for Password Protected to work with W3 Total Cache you must disable caching when the Password Protected cookie is set.', 'password-protected' ) . ' 
+			' . wp_kses_post( sprintf( __( 'You can adjust the cookie settings for W3 Total Cache under <a href="%s">Performance > Page Cache > Advanced > Rejected Cookies</a>.', 'password-protected' ), admin_url( '/admin.php?page=w3tc_pgcache#advanced' ) ) ) .
+		     '</p>';
 
 	}
 

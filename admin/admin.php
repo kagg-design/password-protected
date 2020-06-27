@@ -258,8 +258,8 @@ class Password_Protected_Admin {
 	 */
 	public function password_protected_settings_section() {
 
-		echo '<p>' . __( 'Password protect your web site. Users will be asked to enter a password to view the site.', 'password-protected' ) . '<br />
-			' . __( 'For more information about Password Protected settings, view the "Help" tab at the top of this page.', 'password-protected' ) . '</p>';
+		echo '<p>' . esc_html__( 'Password protect your web site. Users will be asked to enter a password to view the site.', 'password-protected' ) . '<br />
+			' . esc_html__( 'For more information about Password Protected settings, view the "Help" tab at the top of this page.', 'password-protected' ) . '</p>';
 
 	}
 
@@ -268,7 +268,7 @@ class Password_Protected_Admin {
 	 */
 	public function password_protected_status_field() {
 
-		echo '<label><input name="password_protected_status" id="password_protected_status" type="checkbox" value="1" ' . checked( 1, get_option( 'password_protected_status' ), false ) . ' /> ' . __( 'Enabled', 'password-protected' ) . '</label>';
+		echo '<label><input name="password_protected_status" id="password_protected_status" type="checkbox" value="1" ' . checked( 1, get_option( 'password_protected_status' ), false ) . ' /> ' . esc_html__( 'Enabled', 'password-protected' ) . '</label>';
 
 	}
 
@@ -277,10 +277,10 @@ class Password_Protected_Admin {
 	 */
 	public function password_protected_permissions_field() {
 
-		echo '<label><input name="password_protected_administrators" id="password_protected_administrators" type="checkbox" value="1" ' . checked( 1, get_option( 'password_protected_administrators' ), false ) . ' /> ' . __( 'Allow Administrators', 'password-protected' ) . '</label>';
-		echo '<label><input name="password_protected_users" id="password_protected_users" type="checkbox" value="1" ' . checked( 1, get_option( 'password_protected_users' ), false ) . ' style="margin-left: 20px;" /> ' . __( 'Allow Logged In Users', 'password-protected' ) . '</label>';
-		echo '<label><input name="password_protected_feeds" id="password_protected_feeds" type="checkbox" value="1" ' . checked( 1, get_option( 'password_protected_feeds' ), false ) . ' style="margin-left: 20px;" /> ' . __( 'Allow RSS Feeds', 'password-protected' ) . '</label>';
-		echo '<label><input name="password_protected_rest" id="password_protected_rest" type="checkbox" value="1" ' . checked( 1, get_option( 'password_protected_rest' ), false ) . ' style="margin-left: 20px;" /> ' . __( 'Allow REST API Access', 'password-protected' ) . '</label>';
+		echo '<label><input name="password_protected_administrators" id="password_protected_administrators" type="checkbox" value="1" ' . checked( 1, get_option( 'password_protected_administrators' ), false ) . ' /> ' . esc_html__( 'Allow Administrators', 'password-protected' ) . '</label>';
+		echo '<label><input name="password_protected_users" id="password_protected_users" type="checkbox" value="1" ' . checked( 1, get_option( 'password_protected_users' ), false ) . ' style="margin-left: 20px;" /> ' . esc_html__( 'Allow Logged In Users', 'password-protected' ) . '</label>';
+		echo '<label><input name="password_protected_feeds" id="password_protected_feeds" type="checkbox" value="1" ' . checked( 1, get_option( 'password_protected_feeds' ), false ) . ' style="margin-left: 20px;" /> ' . esc_html__( 'Allow RSS Feeds', 'password-protected' ) . '</label>';
+		echo '<label><input name="password_protected_rest" id="password_protected_rest" type="checkbox" value="1" ' . checked( 1, get_option( 'password_protected_rest' ), false ) . ' style="margin-left: 20px;" /> ' . esc_html__( 'Allow REST API Access', 'password-protected' ) . '</label>';
 
 	}
 
@@ -289,8 +289,8 @@ class Password_Protected_Admin {
 	 */
 	public function password_protected_password_field() {
 
-		echo '<input type="password" name="password_protected_password[new]" id="password_protected_password_new" size="16" value="" autocomplete="off"> <span class="description">' . __( 'If you would like to change the password type a new one. Otherwise leave this blank.', 'password-protected' ) . '</span><br>
-			<input type="password" name="password_protected_password[confirm]" id="password_protected_password_confirm" size="16" value="" autocomplete="off"> <span class="description">' . __( 'Type your new password again.', 'password-protected' ) . '</span>';
+		echo '<input type="password" name="password_protected_password[new]" id="password_protected_password_new" size="16" value="" autocomplete="off"> <span class="description">' . esc_html__( 'If you would like to change the password type a new one. Otherwise leave this blank.', 'password-protected' ) . '</span><br>
+			<input type="password" name="password_protected_password[confirm]" id="password_protected_password_confirm" size="16" value="" autocomplete="off"> <span class="description">' . esc_html__( 'Type your new password again.', 'password-protected' ) . '</span>';
 
 	}
 
@@ -299,12 +299,20 @@ class Password_Protected_Admin {
 	 */
 	public function password_protected_allowed_ip_addresses_field() {
 
-		echo '<textarea name="password_protected_allowed_ip_addresses" id="password_protected_allowed_ip_addresses" rows="3" class="large-text" />' . get_option( 'password_protected_allowed_ip_addresses' ) . '</textarea>';
+		echo '<textarea name="password_protected_allowed_ip_addresses" id="password_protected_allowed_ip_addresses" rows="3" class="large-text" />' . wp_kses_post( get_option( 'password_protected_allowed_ip_addresses' ) ) . '</textarea>';
 
 		echo '<p class="description">' . esc_html__( 'Enter one IP address per line.', 'password-protected' );
-		if ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
-			echo ' ' . esc_html( sprintf( __( 'Your IP is address %s.', 'password-protected' ), $_SERVER['REMOTE_ADDR'] ) );
+
+		// We do not use this method on VIP.
+		// phpcs:disable WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__
+		// phpcs:disable WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders
+		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? filter_var( $_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP ) : null;
+		if ( $remote_addr ) {
+			echo ' ' . esc_html( sprintf( __( 'Your IP is address %s.', 'password-protected' ), $remote_addr ) );
 		}
+		// phpcs:enable WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders
+		// phpcs:enable WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__
+
 		echo '</p>';
 
 	}
@@ -323,7 +331,7 @@ class Password_Protected_Admin {
 	 */
 	public function password_protected_remember_me_lifetime_field() {
 
-		echo '<label><input name="password_protected_remember_me_lifetime" id="password_protected_remember_me_lifetime" type="number" value="' . get_option( 'password_protected_remember_me_lifetime', 14 ) . '" /></label>';
+		echo '<label><input name="password_protected_remember_me_lifetime" id="password_protected_remember_me_lifetime" type="number" value="' . esc_html( get_option( 'password_protected_remember_me_lifetime', 14 ) ) . '" /></label>';
 
 	}
 
@@ -393,6 +401,11 @@ class Password_Protected_Admin {
 	 */
 	public function password_protected_admin_notices() {
 
+		/**
+		 * Main plugin class instance.
+		 *
+		 * @var Password_Protected
+		 */
 		global $Password_Protected;
 
 		// Check Support
@@ -400,7 +413,7 @@ class Password_Protected_Admin {
 		if ( $this->is_current_screen( $screens ) ) {
 			$supported = $Password_Protected->is_plugin_supported();
 			if ( is_wp_error( $supported ) ) {
-				echo $this->admin_error_display( $supported->get_error_message( $supported->get_error_code() ) );
+				echo wp_kses_post( $this->admin_error_display( $supported->get_error_message( $supported->get_error_code() ) ) );
 			}
 		}
 
@@ -410,16 +423,16 @@ class Password_Protected_Admin {
 			$pwd = get_option( 'password_protected_password' );
 
 			if ( (bool) $status && empty( $pwd ) ) {
-				echo $this->admin_error_display( __( 'You have enabled password protection but not yet set a password. Please set one below.', 'password-protected' ) );
+				echo wp_kses_post( $this->admin_error_display( __( 'You have enabled password protection but not yet set a password. Please set one below.', 'password-protected' ) ) );
 			}
 
 			if ( current_user_can( 'manage_options' ) && ( (bool) get_option( 'password_protected_administrators' ) || (bool) get_option( 'password_protected_users' ) ) ) {
 				if ( (bool) get_option( 'password_protected_administrators' ) && (bool) get_option( 'password_protected_users' ) ) {
-					echo $this->admin_error_display( __( 'You have enabled password protection and allowed administrators and logged in users - other users will still need to enter a password to view the site.', 'password-protected' ) );
+					echo wp_kses_post( $this->admin_error_display( __( 'You have enabled password protection and allowed administrators and logged in users - other users will still need to enter a password to view the site.', 'password-protected' ) ) );
 				} elseif ( (bool) get_option( 'password_protected_administrators' ) ) {
-					echo $this->admin_error_display( __( 'You have enabled password protection and allowed administrators - other users will still need to enter a password to view the site.', 'password-protected' ) );
+					echo wp_kses_post( $this->admin_error_display( __( 'You have enabled password protection and allowed administrators - other users will still need to enter a password to view the site.', 'password-protected' ) ) );
 				} elseif ( (bool) get_option( 'password_protected_users' ) ) {
-					echo $this->admin_error_display( __( 'You have enabled password protection and allowed logged in users - other users will still need to enter a password to view the site.', 'password-protected' ) );
+					echo wp_kses_post( $this->admin_error_display( __( 'You have enabled password protection and allowed logged in users - other users will still need to enter a password to view the site.', 'password-protected' ) ) );
 				}
 			}
 
