@@ -142,11 +142,7 @@ class Password_Protected {
 			return false;
 		}
 
-		if ( (bool) get_option( 'password_protected_status' ) ) {
-			$is_active = true;
-		} else {
-			$is_active = false;
-		}
+		$is_active = (bool) get_option( 'password_protected_status' );
 
 		$is_active = apply_filters( 'password_protected_is_active', $is_active );
 
