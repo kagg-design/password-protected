@@ -441,7 +441,11 @@ class Password_Protected {
 			return false;
 		}
 
-		return ( 0 === $validate ) && file_exists( $file );
+		return (
+			( 0 === $validate || 2 === $validate ) &&
+			file_exists( $file ) &&
+			'php' === pathinfo( $file, PATHINFO_EXTENSION )
+		);
 	}
 
 	/**
