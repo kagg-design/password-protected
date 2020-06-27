@@ -93,6 +93,10 @@ class Password_Protected {
 
 		}
 
+		if ( $this->is_vip_env() ) {
+			add_filter( 'password_protected_cookie_name', [ $this, 'vip_cookie_name' ] );
+		}
+
 	}
 
 	/**
@@ -726,6 +730,20 @@ class Password_Protected {
 		 */
 		return apply_filters( 'password_protected_cookie_name', $this->get_site_id() . '_password_protected_auth', $this );
 
+	}
+
+	/**
+	 * Filter for cookie name for VIP platform.
+	 *
+	 * @param $cookie_name
+	 *
+	 * @return string
+	 */
+	public function vip_cookie_name( $cookie_name ) {
+		// On VIP platform, only wordpress cookie are allowed,
+		// so here is the trick to use cookie name in wordpress style.
+
+		return 'wordpress_' . md5( $cookie_name );
 	}
 
 	/**
