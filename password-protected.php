@@ -570,12 +570,17 @@ class Password_Protected {
 			return false;
 		}
 
-		extract( $cookie_elements, EXTR_OVERWRITE );
+		$expiration = $cookie_elements['expiration'];
+		$hmac = $cookie_elements['hmac'];
 
 		$expired = $expiration;
 
+		$request_method = isset( $_SERVER['REQUEST_METHOD'] ) ?
+			filter_var( $_SERVER['REQUEST_METHOD'], FILTER_SANITIZE_STRING ) :
+			null;
+
 		// Allow a grace period for POST and AJAX requests
-		if ( defined( 'DOING_AJAX' ) || 'POST' == $_SERVER['REQUEST_METHOD'] ) {
+		if ( defined( 'DOING_AJAX' ) || 'POST' == $request_method ) {
 			$expired += 3600;
 		}
 
@@ -588,7 +593,7 @@ class Password_Protected {
 		$key = md5( $this->get_site_id() . $this->get_hashed_password() . '|' . $expiration );
 		$hash = hash_hmac( 'md5', $this->get_site_id() . '|' . $expiration, $key);
 
-		if ( $hmac != $hash ) {
+		if ( $hmac !== $hash ) {
 			do_action( 'password_protected_auth_cookie_bad_hash', $cookie_elements );
 			return false;
 		}
@@ -623,7 +628,7 @@ class Password_Protected {
 	 *
 	 * @param   string  $cookie  Cookie string.
 	 * @param   string  $scheme  Cookie scheme.
-	 * @return  string           Cookie string.
+	 * @return  array           Cookie string.
 	 */
 	public function parse_auth_cookie( $cookie = '', $scheme = '' ) {
 
@@ -632,20 +637,20 @@ class Password_Protected {
 			$cookie_name = $this->cookie_name();
 
 			if ( empty( $_COOKIE[ $cookie_name ] ) ) {
-				return false;
+				return [];
 			}
 
-			$cookie = $_COOKIE[ $cookie_name ];
+			$cookie = filter_input( INPUT_COOKIE, $cookie_name, FILTER_SANITIZE_STRING );
 
 		}
 
 		$cookie_elements = explode( '|', $cookie );
 
 		if ( count( $cookie_elements ) != 3 ) {
-			return false;
+			return [];
 		}
 
-		[ $site_id, $expiration, $hmac ] = $cookie_elements;
+		list( $site_id, $expiration, $hmac ) = $cookie_elements;
 
 		return compact( 'site_id', 'expiration', 'hmac', 'scheme' );
 
