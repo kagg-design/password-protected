@@ -744,7 +744,6 @@ class Password_Protected {
 			}
 		}
 
-		require_once ABSPATH . WPINC . '/pluggable.php';
 		// 2.4.0 - Upgrade to wp_hash_password
 		if ( empty( $old_version ) || version_compare( '2.4.0', $old_version, '>' ) ) {
 			$pwd = get_option( 'password_protected_password' );
