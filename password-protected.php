@@ -693,7 +693,7 @@ class Password_Protected {
 		$old_version = get_option( 'password_protected_version' );
 
 		// 1.1 - Upgrade to MD5
-		if ( empty( $old_version ) || version_compare( '1.1', $old_version ) ) {
+		if ( empty( $old_version ) || version_compare( '1.1', $old_version, '>' ) ) {
 			$pwd = get_option( 'password_protected_password' );
 			if ( ! empty( $pwd ) ) {
 				$new_pwd = $this->encrypt_password( $pwd );
