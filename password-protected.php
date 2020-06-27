@@ -42,6 +42,11 @@ $Password_Protected = new Password_Protected();
 
 class Password_Protected {
 
+	/**
+	 * Nonce-related action.
+	 */
+	const ACTION = 'password_protected_action';
+
 	var $version = '2.4.0';
 	var $admin   = null;
 	var $errors  = null;
@@ -285,12 +290,13 @@ class Password_Protected {
 	 */
 	public function maybe_process_logout() {
 
-		if ( isset( $_REQUEST['password-protected'] ) && $_REQUEST['password-protected'] == 'logout' ) {
+		if ( 'logout' === filter_input( INPUT_GET, 'password-protected', FILTER_SANITIZE_STRING ) ) {
 
 			$this->logout();
 
-			if ( isset( $_REQUEST['redirect_to'] ) ) {
-				$redirect_to = esc_url_raw( $_REQUEST['redirect_to'], array( 'http', 'https' ) );
+			$redirect_to = filter_input( INPUT_GET, 'redirect_to', FILTER_SANITIZE_STRING );
+			if ( $redirect_to ) {
+				$redirect_to = esc_url_raw( $redirect_to, [ 'http', 'https' ] );
 			} else {
 				$redirect_to = home_url( '/' );
 			}
@@ -307,35 +313,47 @@ class Password_Protected {
 	 */
 	public function maybe_process_login() {
 
-		if ( $this->is_active() && isset( $_REQUEST['password_protected_pwd'] ) ) {
-			$password_protected_pwd = $_REQUEST['password_protected_pwd'];
-			$pwd = get_option( 'password_protected_password' );
+		if ( ! $this->is_active() ) {
+			return;
+		}
 
-			// If correct password...
-			if ( ( hash_equals( $pwd, $this->encrypt_password( $password_protected_pwd ) ) && $pwd != '' ) || apply_filters( 'password_protected_process_login', false, $password_protected_pwd ) ) {
+		$password_protected_pwd = filter_input( INPUT_POST, 'password_protected_pwd', FILTER_SANITIZE_STRING );
 
-				$remember = isset( $_REQUEST['password_protected_rememberme'] ) ? boolval( $_REQUEST['password_protected_rememberme'] ) : false;
+		if ( ! $password_protected_pwd ) {
+			return;
+		}
 
-				if ( ! $this->allow_remember_me() ) {
-					$remember = false;
-				}
+		$nonce = filter_input( INPUT_POST, 'nonce', FILTER_SANITIZE_STRING );
 
-				$this->set_auth_cookie( $remember );
-				$redirect_to = isset( $_REQUEST['redirect_to'] ) ? $_REQUEST['redirect_to'] : '';
-				$redirect_to = apply_filters( 'password_protected_login_redirect', $redirect_to );
+		$pwd = get_option( 'password_protected_password' );
 
-				if ( ! empty( $redirect_to ) ) {
-					$this->safe_redirect( $redirect_to );
-					exit;
-				}
+		// If correct password...
+		if (
+			( wp_verify_nonce( $nonce, self::ACTION ) && hash_equals( $pwd, $this->encrypt_password( $password_protected_pwd ) ) && '' !== $pwd ) ||
+			apply_filters( 'password_protected_process_login', false, $password_protected_pwd )
+		) {
 
-			} else {
+			$remember = (bool) filter_input( INPUT_POST, 'password_protected_rememberme', FILTER_VALIDATE_BOOLEAN );
 
-				// ... otherwise incorrect password
-				$this->clear_auth_cookie();
-				$this->errors->add( 'incorrect_password', __( 'Incorrect Password', 'password-protected' ) );
-
+			if ( ! $this->allow_remember_me() ) {
+				$remember = false;
 			}
+
+			$this->set_auth_cookie( $remember );
+
+			$redirect_to = filter_input( INPUT_POST, 'redirect_to', FILTER_SANITIZE_STRING );
+			$redirect_to = apply_filters( 'password_protected_login_redirect', $redirect_to );
+
+			if ( ! empty( $redirect_to ) ) {
+				$this->safe_redirect( $redirect_to );
+				exit;
+			}
+
+		} else {
+
+			// ... otherwise incorrect password
+			$this->clear_auth_cookie();
+			$this->errors->add( 'incorrect_password', __( 'Incorrect Password', 'password-protected' ) );
 
 		}
 
@@ -361,7 +379,7 @@ class Password_Protected {
 		$show_login = apply_filters( 'password_protected_show_login', $this->is_active() );
 
 		// Logged in
-		if ( $this->is_user_logged_in() )  {
+		if ( $this->is_user_logged_in() ) {
 			$show_login = false;
 		}
 
@@ -369,8 +387,11 @@ class Password_Protected {
 			return;
 		}
 
+		$nonce = $this->request( 'nonce', FILTER_SANITIZE_STRING );
+		$password_protected = filter_input( INPUT_GET, 'password-protected', FILTER_SANITIZE_STRING );
+
 		// Show login form
-		if ( isset( $_REQUEST['password-protected'] ) && 'login' == $_REQUEST['password-protected'] ) {
+		if ( wp_verify_nonce( $nonce, self::ACTION ) && 'login' === $password_protected ) {
 
 			$default_theme_file = locate_template( array( 'password-protected-login.php' ) );
 
@@ -395,6 +416,8 @@ class Password_Protected {
 			if ( ! empty( $redirect_to_url ) ) {
 				$redirect_to = add_query_arg( 'redirect_to', urlencode( $redirect_to_url ), $redirect_to );
 			}
+
+			$redirect_to = add_query_arg( 'nonce', wp_create_nonce( self::ACTION ), $redirect_to );
 
 			wp_redirect( $redirect_to );
 			exit();
@@ -825,6 +848,23 @@ class Password_Protected {
 
 		return $access;
 
+	}
+
+	/**
+	 * Retrieve variable from $_POST or $_GET.
+	 *
+	 * @param string $name   Variable name.
+	 * @param int    $filter Filter.
+	 *
+	 * @return mixed
+	 */
+	public function request( $name, $filter ) {
+		$result = filter_input( INPUT_POST, $name, $filter );
+		if ( null === $result ) {
+			$result = filter_input( INPUT_GET, $name, $filter );
+		}
+
+		return $result;
 	}
 
 }

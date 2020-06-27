@@ -104,6 +104,14 @@ if ( $is_iphone ) {
 do_action( 'login_enqueue_scripts' );
 do_action( 'password_protected_login_head' );
 
+$redirect_to = '';
+
+$nonce = $Password_Protected->request( 'nonce', FILTER_SANITIZE_STRING );
+
+if ( wp_verify_nonce( $nonce, $Password_Protected::ACTION ) ) {
+	$redirect_to = $Password_Protected->request( 'redirect_to', FILTER_SANITIZE_STRING );
+}
+
 ?>
 
 </head>
@@ -131,7 +139,8 @@ do_action( 'password_protected_login_head' );
 			<input type="submit" name="wp-submit" id="wp-submit" class="button button-primary button-large" value="<?php esc_attr_e( 'Log In' ); ?>" tabindex="100" />
 			<input type="hidden" name="password_protected_cookie_test" value="1" />
 			<input type="hidden" name="password-protected" value="login" />
-			<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $_REQUEST['redirect_to'] ); ?>" />
+			<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
+			<input type="hidden" name="nonce" value="<?php echo esc_attr( $nonce ); ?>" />
 		</p>
 	</form>
 
