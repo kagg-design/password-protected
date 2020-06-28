@@ -1,18 +1,23 @@
 <?php
-
 /**
- * @package     Password Protected
- * @subpackage  Admin Bar
- *
+ * Admin_Bar class file.
  * Adds an indicator in the admin if Password Protection is enabled.
+ *
+ * @package    password-protected
+ * @subpackage admin-bar
  */
 
 namespace Password_Protected;
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 
-add_action( 'plugins_loaded', array( 'Password_Protected\Admin_Bar', 'load' ), 15 );
+add_action( 'plugins_loaded', [ 'Password_Protected\Admin_Bar', 'load' ], 15 );
 
+/**
+ * Class Admin_Bar
+ */
 class Admin_Bar {
 
 	/**
@@ -22,9 +27,9 @@ class Admin_Bar {
 	 */
 	public static function load() {
 
-		add_action( 'wp_head', array( get_class(), 'styles' ) );
-		add_action( 'admin_head', array( get_class(), 'styles' ) );
-		add_action( 'wp_before_admin_bar_render', array( get_class(), 'toolbar_item' ) );
+		add_action( 'wp_head', [ get_class(), 'styles' ] );
+		add_action( 'admin_head', [ get_class(), 'styles' ] );
+		add_action( 'wp_before_admin_bar_render', [ get_class(), 'toolbar_item' ] );
 
 	}
 
@@ -39,14 +44,16 @@ class Admin_Bar {
 
 		if ( self::allow_current_user() ) {
 
-			$wp_admin_bar->add_menu( array(
-				'id'     => 'password_protected',
-				'title'  => '',
-				'href'   => self::get_toolbar_item_url(),
-				'meta'   => array(
-					'title' => self::get_toolbar_item_title()
-				)
-			) );
+			$wp_admin_bar->add_menu(
+				[
+					'id'    => 'password_protected',
+					'title' => '',
+					'href'  => self::get_toolbar_item_url(),
+					'meta'  => [
+						'title' => self::get_toolbar_item_title(),
+					],
+				]
+			);
 
 		}
 
@@ -92,19 +99,34 @@ class Admin_Bar {
 		if ( self::allow_current_user() ) {
 
 			if ( self::is_enabled() ) {
-				$icon = '\f160';  // Locked
+				$icon       = '\f160';  // Locked.
 				$background = '#46b450';
 			} else {
-				$icon = '\f528';  // Unlocked
+				$icon       = '\f528';  // Unlocked.
 				$background = 'transparent';
 			}
 
 			?>
 			<style type="text/css">
-			#wp-admin-bar-password_protected { background-color: <?php echo $background; ?> !important; }
-			#wp-admin-bar-password_protected > .ab-item { color: #fff !important;  }
-			#wp-admin-bar-password_protected > .ab-item:before { content: "<?php echo $icon; ?>"; top: 2px; color: #fff !important; margin-right: 0px; }
-			#wp-admin-bar-password_protected:hover > .ab-item { background-color: <?php echo $background; ?> !important; color: #fff; }
+				#wp-admin-bar-password_protected {
+					background-color: <?php echo esc_attr( $background ); ?> !important;
+				}
+
+				#wp-admin-bar-password_protected > .ab-item {
+					color: #fff !important;
+				}
+
+				#wp-admin-bar-password_protected > .ab-item:before {
+					content: "<?php echo esc_attr( $icon ); ?>";
+					top: 2px;
+					color: #fff !important;
+					margin-right: 0;
+				}
+
+				#wp-admin-bar-password_protected:hover > .ab-item {
+					background-color: <?php echo esc_attr( $background ); ?> !important;
+					color: #fff;
+				}
 			</style>
 			<?php
 
